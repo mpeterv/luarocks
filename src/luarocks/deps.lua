@@ -536,7 +536,7 @@ function deps.fulfill_dependencies(rockspec, deps_mode, install_mode)
    end
 
    -- Apply install_mode recursively.
-   local install_options = {install_mode = "install", deps_install_mode = install_mode}
+   local install_options = {deps_install_mode = install_mode}
 
    for _, dep in ipairs(deps_to_install) do
       -- Double-check in case dependency was filled during recursion.
