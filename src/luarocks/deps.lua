@@ -407,19 +407,19 @@ function deps.diagnose_dependency(dep, deps_mode, install_mode)
    assert(type(dep) == "table")
    local installed = match_dep(dep, nil, deps_mode)
 
-   if install_mode == "install" then
-      return installed and "reinstall" or "new"
-   end
-
    if installed and (install_mode == "satisfy" or cfg.rocks_provided[dep.name]) then
       return
    end
 
-   if install_mode == "upgrade" then
+   if install_mode == "install" then
+      return installed and "reinstall" or "new"
+   end
+
+   if installed and install_mode == "upgrade" then
       local search = require("luarocks.search")
       local url, latest_version = search.find_suitable_rock(dep)
 
-      if url and not deps.compare_version(latest_version, installed.version) then
+      if url and not deps.compare_versions(latest_version, installed.version) then
          return
       end
 
