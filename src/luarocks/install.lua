@@ -22,6 +22,12 @@ install.help = [[
 Argument may be the name of a rock to be fetched from a repository
 or a filename of a locally available rock.
 
+--lazy              Do not install a rock by name if it's
+                    already installed.
+--upgrade           Do not install a rock by name if its
+                    latest version is already installed.
+--upgrade-deps      Recursively upgrade dependencies of the rock.
+--reinstall-deps    Recursively reinstall dependencies of the rock.
 --keep              Do not remove previously installed versions of the
                     rock after installing a new one. This behavior can
                     be made permanent by setting keep_other_versions=true
@@ -269,6 +275,18 @@ function install.run(...)
 
    local ok, err = fs.check_command_permissions(flags)
    if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end
+
+   if flags.upgrade then
+      flags.install_mode = "upgrade"
+   elseif flags.lazy then
+      flags.install_mode = "satisfy"
+   end
+
+   if flags["upgrade-deps"] then
+      flags.deps_install_mode = "upgrade"
+   elseif flags["reinstall-deps"] then
+      flags.deps_install_mode = "install"
+   end
 
    if name:match("%.rockspec$") or name:match("%.src%.rock$") or name:match("%.rock") then
       return install.install_by_url(name, flags)
