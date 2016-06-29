@@ -118,16 +118,14 @@ upload_servers = {
 }
 EOF
 cat <<EOF > $testing_dir/luacov.config
-return {
-   statsfile = "$testing_dir/luacov.stats.out",
-   reportfile = "$testing_dir/luacov.report.out",
-   modules = {
-      ["luarocks"] = "src/bin/luarocks",
-      ["luarocks-admin"] = "src/bin/luarocks-admin",
-      ["luarocks.*"] = "src",
-      ["luarocks.*.*"] = "src",
-      ["luarocks.*.*.*"] = "src"
-   }
+statsfile = "$testing_dir/luacov.stats.out"
+reportfile = "$testing_dir/luacov.report.out"
+modules = {
+   ["luarocks"] = "src/bin/luarocks",
+   ["luarocks-admin"] = "src/bin/luarocks-admin",
+   ["luarocks.*"] = "src",
+   ["luarocks.*.*"] = "src",
+   ["luarocks.*.*.*"] = "src"
 }
 EOF
 
@@ -182,7 +180,7 @@ verrev_cprint=0.1-2
 new_version_say=1.2-1
 old_version_say=1.0-1
 
-version_luacov=0.11.0
+version_luacov=0.12.0
 verrev_luacov=${version_luacov}-1
 version_lxsh=0.8.6
 version_validate_args=1.5.4
@@ -232,6 +230,7 @@ mkdir -p "$testing_server"
    get() { [ -e `basename "$1"` ] || wget -c "$1"; }
    get "$luarocks_repo/luacov-${verrev_luacov}.src.rock"
    get "$luarocks_repo/luacov-${verrev_luacov}.rockspec"
+   get "$luarocks_repo/cluacov-0.1.0-1.src.rock"
    get "$luarocks_repo/luadoc-3.0.1-1.src.rock"
    get "$luarocks_repo/lualogging-1.3.0-1.src.rock"
    get "$luarocks_repo/luasocket-${verrev_luasocket}.src.rock"
@@ -610,7 +609,7 @@ run_with_minimal_environment() {
    echo "==========================================="
    echo "Running with minimal environment"
    echo "==========================================="
-   build_environment luacov
+   build_environment luacov cluacov
    run_tests $1
 }
 
@@ -622,7 +621,7 @@ run_with_full_environment() {
    local bitop=
    [ "$luaversion" = "5.1.5" ] && bitop=luabitop
    
-   build_environment luacov luafilesystem luasocket $bitop luaposix md5 lzlib
+   build_environment luacov cluacov luafilesystem luasocket $bitop luaposix md5 lzlib
    run_tests $1
 }
 
