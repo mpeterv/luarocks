@@ -400,6 +400,26 @@ local function rock_status(name, deps_mode)
    return installed and installed.." "..installation_type or "not installed"
 end
 
+--- Check depenendencies of a rock and report any missing ones.
+-- @param rockspec table: A rockspec in table format.
+-- @param deps_mode string: Which trees to check dependencies for:
+-- "one" for the current default tree, "all" for all trees,
+-- "order" for all trees with priority >= the current default, "none" for no trees.
+function deps.report_missing_dependencies(rockspec, deps_mode)
+   local first_missing_dep = true
+
+   for _, dep in ipairs(rockspec.dependencies) do
+      if not match_dep(dep, nil, deps_mode) then
+         if first_missing_dep then
+            util.printout(("Missing dependencies for %s %s:"):format(rockspec.name, rockspec.version))
+            first_missing_dep = false
+         end
+
+         util.printout(("   %s (%s)"):format(deps.show_dep(dep), rock_status(dep.name, deps_mode)))
+      end
+   end
+end
+
 --- Check dependencies of a rock and attempt to install any missing ones.
 -- Packages are installed using the LuaRocks "install" command.
 -- Aborts the program if a dependency could not be fulfilled.
@@ -439,20 +459,9 @@ function deps.fulfill_dependencies(rockspec, deps_mode)
       end
    end
 
+   deps.report_missing_dependencies(rockspec, deps_mode)
+
    local first_missing_dep = true
-
-   for _, dep in ipairs(rockspec.dependencies) do
-      if not match_dep(dep, nil, deps_mode) then
-         if first_missing_dep then
-            util.printout(("Missing dependencies for %s %s:"):format(rockspec.name, rockspec.version))
-            first_missing_dep = false
-         end
-
-         util.printout(("   %s (%s)"):format(deps.show_dep(dep), rock_status(dep.name, deps_mode)))
-      end
-   end
-
-   first_missing_dep = true
 
    for _, dep in ipairs(rockspec.dependencies) do
       if not match_dep(dep, nil, deps_mode) then
