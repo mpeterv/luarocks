@@ -683,17 +683,15 @@ function deps.check_external_deps(rockspec, mode)
    return true
 end
 
---- Recursively scan dependencies, to build a transitive closure of all
--- dependent packages.
--- @param results table: The results table being built.
--- @param missing table: The table of missing dependencies being recursively built.
+--- Recursively add satisfied dependencies of a package to a table,
+-- to build a transitive closure of all dependent packages.
+-- Additionally ensures that `dependencies` table of the manifest is up-to-date.
+-- @param results table: The results table being built, maps package names to versions.
 -- @param manifest table: The manifest table containing dependencies.
 -- @param name string: Package name.
 -- @param version string: Package version.
--- @return (table, table): The results and a table of missing dependencies.
-function deps.scan_deps(results, missing, manifest, name, version, deps_mode)
+function deps.scan_deps(results, manifest, name, version, deps_mode)
    assert(type(results) == "table")
-   assert(type(missing) == "table")
    assert(type(manifest) == "table")
    assert(type(name) == "string")
    assert(type(version) == "string")
@@ -701,36 +699,28 @@ function deps.scan_deps(results, missing, manifest, name, version, deps_mode)
    local fetch = require("luarocks.fetch")
 
    if results[name] then
-      return results, missing
+      return
    end
    if not manifest.dependencies then manifest.dependencies = {} end
    local dependencies = manifest.dependencies
    if not dependencies[name] then dependencies[name] = {} end
    local dependencies_name = dependencies[name]
    local deplist = dependencies_name[version]
-   local rockspec, err
+   local rockspec
    if not deplist then
-      rockspec, err = fetch.load_local_rockspec(path.rockspec_file(name, version), false)
-      if err then
-         missing[name.." "..version] = err
-         return results, missing
+      rockspec = fetch.load_local_rockspec(path.rockspec_file(name, version), false)
+      if not rockspec then
+         return
       end
       dependencies_name[version] = rockspec.dependencies
    else
       rockspec = { dependencies = deplist }
    end
-   local matched, failures = deps.match_deps(rockspec, nil, deps_mode)
-   results[name] = results
-   for _, match in pairs(matched) do
-      results, missing = deps.scan_deps(results, missing, manifest, match.name, match.version, deps_mode)
-   end
-   if next(failures) then
-      for _, failure in pairs(failures) do
-         missing[deps.show_dep(failure)] = "failed"
-      end
-   end
+   local matched = deps.match_deps(rockspec, nil, deps_mode)
    results[name] = version
-   return results, missing
+   for _, match in pairs(matched) do
+      deps.scan_deps(results, manifest, match.name, match.version, deps_mode)
+   end
 end
 
 local valid_deps_modes = {

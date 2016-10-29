@@ -276,7 +276,8 @@ local function update_dependencies(manifest, deps_mode)
       for version, repositories in pairs(versions) do
          for _, repo in ipairs(repositories) do
             if repo.arch == "installed" then
-               repo.dependencies = deps.scan_deps({}, {}, manifest, pkg, version, deps_mode)
+               repo.dependencies = {}
+               deps.scan_deps(repo.dependencies, manifest, pkg, version, deps_mode)
                repo.dependencies[pkg] = nil
             end
          end
