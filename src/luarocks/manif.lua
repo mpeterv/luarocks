@@ -522,12 +522,8 @@ function manif.check_dependencies(repo, deps_mode)
       for version, version_entries in util.sortedpairs(versions, deps.compare_versions) do
          for _, entry in ipairs(version_entries) do
             if entry.arch == "installed" then
-               local rockspec, err = fetch.load_local_rockspec(path.rockspec_file(name, version), false)
-
-               if rockspec then
-                  deps.report_missing_dependencies(rockspec, deps_mode)
-               else
-                  util.printerr("Couldn't load rockspec for "..name.." "..version..": "..err)
+               if manifest.dependencies[name] and manifest.dependencies[name][version] then
+                  deps.report_missing_dependencies(name, version, manifest.dependencies[name][version], deps_mode)
                end
             end
          end

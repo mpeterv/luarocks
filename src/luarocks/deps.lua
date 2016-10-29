@@ -400,18 +400,20 @@ local function rock_status(name, deps_mode)
    return installed and installed.." "..installation_type or "not installed"
 end
 
---- Check depenendencies of a rock and report any missing ones.
--- @param rockspec table: A rockspec in table format.
+--- Check depenendencies of a package and report any missing ones.
+-- @param name string: package name.
+-- @param version string: package version.
+-- @param dependencies table: array of dependencies.
 -- @param deps_mode string: Which trees to check dependencies for:
 -- "one" for the current default tree, "all" for all trees,
 -- "order" for all trees with priority >= the current default, "none" for no trees.
-function deps.report_missing_dependencies(rockspec, deps_mode)
+function deps.report_missing_dependencies(name, version, dependencies, deps_mode)
    local first_missing_dep = true
 
-   for _, dep in ipairs(rockspec.dependencies) do
+   for _, dep in ipairs(dependencies) do
       if not match_dep(dep, nil, deps_mode) then
          if first_missing_dep then
-            util.printout(("Missing dependencies for %s %s:"):format(rockspec.name, rockspec.version))
+            util.printout(("Missing dependencies for %s %s:"):format(name, version))
             first_missing_dep = false
          end
 
@@ -459,7 +461,7 @@ function deps.fulfill_dependencies(rockspec, deps_mode)
       end
    end
 
-   deps.report_missing_dependencies(rockspec, deps_mode)
+   deps.report_missing_dependencies(rockspec.name, rockspec.version, rockspec.dependencies, deps_mode)
 
    local first_missing_dep = true
 
@@ -706,10 +708,11 @@ function deps.scan_deps(results, manifest, name, version, deps_mode)
    if not dependencies[name] then dependencies[name] = {} end
    local dependencies_name = dependencies[name]
    local deplist = dependencies_name[version]
-   local rockspec
+   local rockspec, err
    if not deplist then
-      rockspec = fetch.load_local_rockspec(path.rockspec_file(name, version), false)
+      rockspec, err = fetch.load_local_rockspec(path.rockspec_file(name, version), false)
       if not rockspec then
+         util.printerr("Couldn't load rockspec for "..name.." "..version..": "..err)
          return
       end
       dependencies_name[version] = rockspec.dependencies
