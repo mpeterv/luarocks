@@ -38,26 +38,26 @@ end
 local function recurse_rock_manifest_tree(file_tree, action) 
    assert(type(file_tree) == "table")
    assert(type(action) == "function")
-   local function do_recurse_rock_manifest_tree(tree, parent_path, parent_module)
+   local function do_recurse_rock_manifest_tree(tree, parent_path)
       
       for file, sub in pairs(tree) do
          if type(sub) == "table" then
-            local ok, err = do_recurse_rock_manifest_tree(sub, parent_path..file.."/", parent_module..file..".")
+            local ok, err = do_recurse_rock_manifest_tree(sub, parent_path..file.."/")
             if not ok then return nil, err end
          else
-            local ok, err = action(parent_path, parent_module, file)
+            local ok, err = action(parent_path, file)
             if not ok then return nil, err end
          end
       end
       return true
    end
-   return do_recurse_rock_manifest_tree(file_tree, "", "")
+   return do_recurse_rock_manifest_tree(file_tree, "")
 end
 
 local function store_package_data(result, name, file_tree)
    if not file_tree then return end
    return recurse_rock_manifest_tree(file_tree, 
-      function(parent_path, parent_module, file)
+      function(parent_path, file)
          local pathname = parent_path..file
          result[path.path_to_module(pathname)] = pathname
          return true
@@ -244,7 +244,7 @@ function repos.deploy_files(name, version, wrap_bin_scripts, deps_mode)
    local function deploy_file_tree(file_tree, path_fn, deploy_dir, move_fn, suffix)
       local source_dir = path_fn(name, version)
       return recurse_rock_manifest_tree(file_tree, 
-         function(parent_path, parent_module, file)
+         function(parent_path, file)
             local source = dir.path(source_dir, parent_path, file)
             local target = dir.path(deploy_dir, parent_path, file)
 
@@ -335,7 +335,7 @@ function repos.delete_version(name, version, deps_mode, quick)
 
    local function delete_deployed_file_tree(file_tree, deploy_dir, suffix)
       return recurse_rock_manifest_tree(file_tree, 
-         function(parent_path, parent_module, file)
+         function(parent_path, file)
             local target = dir.path(deploy_dir, parent_path, file)
             local versioned = path.versioned_name(target, deploy_dir, name, version)
 
