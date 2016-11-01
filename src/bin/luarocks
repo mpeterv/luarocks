@@ -1,4 +1,5 @@
-#!/usr/bin/env lua
+#!/home/mpeterv/lua53/bin/lua53
+package.path = [[/home/mpeterv/luarocks/src/?.lua;]]..package.path
 
 -- this should be loaded first.
 local cfg = require("luarocks.cfg")
