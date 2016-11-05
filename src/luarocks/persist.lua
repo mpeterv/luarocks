@@ -6,6 +6,7 @@
 local persist = {}
 setmetatable(persist, { __index = require("luarocks.core.persist") })
 
+local fs = require("luarocks.fs")
 local util = require("luarocks.util")
 
 local write_table
@@ -132,6 +133,24 @@ function persist.save_from_table(filename, tbl, field_order)
    write_table_as_assignments(out, tbl, field_order)
    out:close()
    return true
+end
+
+--- Save the contents of a table in a file, atomically replacing
+-- previous version of the file if it exists.
+-- Each element of the table is saved as a global assignment.
+-- Only numbers, strings and tables (containing numbers, strings
+-- or other recursively processed tables) are supported.
+-- @param filename string: the output filename.
+-- @param tbl table: the table containing the data to be written
+-- @param field_order table: an optional array indicating the order of top-level fields.
+-- @return boolean or (nil, string): true if successful, or nil and a
+-- message in case of errors.
+function persist.replace_from_table(filename, tbl, field_order)
+   local ok, err = persist.save_from_table(filename..".tmp", tbl, field_order)
+   if ok then
+      ok, err = fs.replace_file(filename, filename..".tmp")
+   end
+   return ok, err
 end
 
 return persist

@@ -227,25 +227,6 @@ local function store_results(results, manifest)
    return true
 end
 
---- Commit a table to disk in given local path.
--- @param where string: The directory where the table should be saved.
--- @param name string: The filename.
--- @param tbl table: The table to be saved.
--- @return boolean or (nil, string): true if successful, or nil and a
--- message in case of errors.
-local function save_table(where, name, tbl)
-   assert(type(where) == "string")
-   assert(type(name) == "string")
-   assert(type(tbl) == "table")
-
-   local filename = dir.path(where, name)
-   local ok, err = persist.save_from_table(filename..".tmp", tbl)
-   if ok then
-      ok, err = fs.replace_file(filename, filename..".tmp")
-   end
-   return ok, err
-end
-
 function writer.make_rock_manifest(name, version)
    local install_dir = path.install_dir(name, version)
    local tree = {}
@@ -274,7 +255,7 @@ function writer.make_rock_manifest(name, version)
    end
    local rock_manifest = { rock_manifest=tree }
    manif.rock_manifest_cache[name.."/"..version] = rock_manifest
-   save_table(install_dir, "rock_manifest", rock_manifest )
+   persist.replace_from_table(path.rock_manifest_file(name, version), rock_manifest)
 end
 
 --- Scan a LuaRocks repository and output a manifest file.
@@ -314,13 +295,13 @@ function writer.make_manifest(repo, deps_mode, remote)
          local vmanifest = { repository = {}, modules = {}, commands = {} }
          local ok, err = store_results(results, vmanifest)
          filter_by_lua_version(vmanifest, luaver, repo, cache)
-         save_table(repo, "manifest-"..luaver, vmanifest)
+         persist.replace_from_table(dir.path(repo, "manifest-"..luaver), vmanifest)
       end
    else
       update_dependencies(manifest, deps_mode)
    end
 
-   return save_table(repo, "manifest", manifest)
+   return persist.replace_from_table(dir.path(repo, "manifest"), manifest)
 end
 
 --- Update manifest file for a local repository
@@ -357,7 +338,7 @@ function writer.add_to_manifest(name, version, repo, deps_mode)
    if not ok then return nil, err end
 
    update_dependencies(manifest, deps_mode)
-   return save_table(rocks_dir, "manifest", manifest)
+   return persist.replace_from_table(dir.path(rocks_dir, "manifest"), manifest)
 end
 
 --- Update manifest file for a local repository
@@ -403,7 +384,7 @@ function writer.remove_from_manifest(name, version, repo, deps_mode)
    end
 
    update_dependencies(manifest, deps_mode)
-   return save_table(rocks_dir, "manifest", manifest)
+   return persist.replace_from_table(dir.path(rocks_dir, "manifest"), manifest)
 end
 
 --- Report missing dependencies for all rocks installed in a repository.
