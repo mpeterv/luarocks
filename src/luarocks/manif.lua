@@ -5,32 +5,12 @@
 local manif = {}
 setmetatable(manif, { __index = require("luarocks.core.manif") })
 
-local persist = require("luarocks.persist")
 local fetch = require("luarocks.fetch")
 local dir = require("luarocks.dir")
 local fs = require("luarocks.fs")
 local cfg = require("luarocks.core.cfg")
 local path = require("luarocks.path")
-
-manif.rock_manifest_cache = {}
-
-function manif.load_rock_manifest(name, version, root)
-   assert(type(name) == "string")
-   assert(type(version) == "string")
-
-   local name_version = name.."/"..version
-   if manif.rock_manifest_cache[name_version] then
-      return manif.rock_manifest_cache[name_version].rock_manifest
-   end
-   local pathname = path.rock_manifest_file(name, version, root)
-   local rock_manifest = persist.load_into_table(pathname)
-   if not rock_manifest then
-      return nil, "rock_manifest file not found for "..name.." "..version.." - not a LuaRocks tree?"
-   end
-   manif.rock_manifest_cache[name_version] = rock_manifest
-   return rock_manifest.rock_manifest
-end
-
+local rock_manif = require("luarocks.rock_manif")
 
 local function fetch_manifest_from(repo_url, filename)
    local url = dir.path(repo_url, filename)
@@ -179,7 +159,7 @@ function manif.get_providing_file(name, version, item_type, item_name, repo)
    end
 
    -- Fallback to rock manifest scanning.
-   local rock_manifest = manif.load_rock_manifest(name, version)
+   local rock_manifest = rock_manif.load_rock_manifest(name, version)
    local subtree = rock_manifest.lib
 
    for path_part in file_path:gmatch("[^/]+") do

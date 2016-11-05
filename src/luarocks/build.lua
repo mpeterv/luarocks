@@ -9,7 +9,7 @@ local dir = require("luarocks.dir")
 local deps = require("luarocks.deps")
 local cfg = require("luarocks.core.cfg")
 local repos = require("luarocks.repos")
-local writer = require("luarocks.manif.writer")
+local rock_manif = require("luarocks.rock_manif")
 
 --- Install files to a given location.
 -- Takes a table where the array part is a list of filenames to be copied.
@@ -314,7 +314,7 @@ function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_m
       fs.pop_dir()
    end
 
-   ok, err = writer.make_rock_manifest(name, version)
+   ok, err = rock_manif.make_rock_manifest(name, version)
    if err then return nil, err end
 
    ok, err = repos.deploy_files(name, version, repos.should_wrap_bin_scripts(rockspec), deps_mode)

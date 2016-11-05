@@ -11,7 +11,7 @@ local fs = require("luarocks.fs")
 local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
 local dir = require("luarocks.dir")
-local manif = require("luarocks.manif")
+local rock_manif = require("luarocks.rock_manif")
 local search = require("luarocks.search")
 
 --- Create a source rock.
@@ -92,7 +92,7 @@ function pack.pack_installed_rock(name, version, tree)
       return nil, "'"..name.." "..version.."' does not seem to be an installed rock."
    end
    
-   local rock_manifest, err = manif.load_rock_manifest(name, version, root)
+   local rock_manifest, err = rock_manif.load_rock_manifest(name, version, root)
    if not rock_manifest then return nil, err end
 
    local name_version = name .. "-" .. version

@@ -8,6 +8,7 @@ local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
 local dir = require("luarocks.dir")
 local manif = require("luarocks.manif")
+local rock_manif = require("luarocks.rock_manif")
 local deps = require("luarocks.deps")
 
 -- Tree of files installed by a package are stored
@@ -97,7 +98,7 @@ function repos.package_modules(name, version)
    assert(type(version) == "string")
 
    local result = {}
-   local rock_manifest = manif.load_rock_manifest(name, version)
+   local rock_manifest = rock_manif.load_rock_manifest(name, version)
    if not rock_manifest then return result end
    store_package_data(result, rock_manifest, "lib")
    store_package_data(result, rock_manifest, "lua")
@@ -118,7 +119,7 @@ function repos.package_commands(name, version)
    assert(type(version) == "string")
 
    local result = {}
-   local rock_manifest = manif.load_rock_manifest(name, version)
+   local rock_manifest = rock_manif.load_rock_manifest(name, version)
    if not rock_manifest then return result end
    store_package_data(result, rock_manifest, "bin")
    return result
@@ -134,7 +135,7 @@ function repos.has_binaries(name, version)
    assert(type(name) == "string")
    assert(type(version) == "string")
 
-   local rock_manifest = manif.load_rock_manifest(name, version)
+   local rock_manifest = rock_manif.load_rock_manifest(name, version)
    if rock_manifest and rock_manifest.bin then
       for name, md5 in pairs(rock_manifest.bin) do
          -- TODO verify that it is the same file. If it isn't, find the actual command.
@@ -275,7 +276,7 @@ function repos.deploy_files(name, version, wrap_bin_scripts, deps_mode)
    assert(type(version) == "string")
    assert(type(wrap_bin_scripts) == "boolean")
 
-   local rock_manifest, load_err = manif.load_rock_manifest(name, version)
+   local rock_manifest, load_err = rock_manif.load_rock_manifest(name, version)
    if not rock_manifest then return nil, load_err end
 
    local function deploy_file_tree(deploy_type, source_dir, move_fn, suffix)
@@ -354,7 +355,7 @@ function repos.delete_version(name, version, deps_mode, quick)
    assert(type(version) == "string")
    assert(type(deps_mode) == "string")
 
-   local rock_manifest, load_err = manif.load_rock_manifest(name, version)
+   local rock_manifest, load_err = rock_manif.load_rock_manifest(name, version)
    if not rock_manifest then return nil, load_err end
 
    local function delete_deployed_file_tree(deploy_type, suffix)

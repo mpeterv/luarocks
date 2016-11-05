@@ -12,6 +12,7 @@ local fetch = require("luarocks.fetch")
 local path = require("luarocks.path")
 local persist = require("luarocks.persist")
 local manif = require("luarocks.manif")
+local rock_manif = require("luarocks.rock_manif")
 
 --- Update storage table to account for items provided by a package.
 -- @param storage table: a table storing items in the following format:
@@ -92,8 +93,6 @@ local function update_dependencies(manifest, deps_mode)
       end
    end
 end
-
-
 
 --- Sort function for ordering rock identifiers in a manifest's
 -- modules table. Rocks are ordered alphabetically by name, and then
@@ -206,7 +205,7 @@ local function store_results(results, manifest)
             local entrytable = {}
             entrytable.arch = entry.arch
             if entry.arch == "installed" then
-               local rock_manifest = manif.load_rock_manifest(name, version)
+               local rock_manifest = rock_manif.load_rock_manifest(name, version)
                if not rock_manifest then
                   return nil, "rock_manifest file not found for "..name.." "..version.." - not a LuaRocks 2 tree?"
                end
@@ -225,37 +224,6 @@ local function store_results(results, manifest)
    sort_package_matching_table(manifest.modules)
    sort_package_matching_table(manifest.commands)
    return true
-end
-
-function writer.make_rock_manifest(name, version)
-   local install_dir = path.install_dir(name, version)
-   local tree = {}
-   for _, file in ipairs(fs.find(install_dir)) do
-      local full_path = dir.path(install_dir, file)
-      local walk = tree
-      local last
-      local last_name
-      for filename in file:gmatch("[^/]+") do
-         local next = walk[filename]
-         if not next then
-            next = {}
-            walk[filename] = next
-         end
-         last = walk
-         last_name = filename
-         walk = next
-      end
-      if fs.is_file(full_path) then
-         local sum, err = fs.get_md5(full_path)
-         if not sum then
-            return nil, "Failed producing checksum: "..tostring(err)
-         end
-         last[last_name] = sum
-      end
-   end
-   local rock_manifest = { rock_manifest=tree }
-   manif.rock_manifest_cache[name.."/"..version] = rock_manifest
-   persist.replace_from_table(path.rock_manifest_file(name, version), rock_manifest)
 end
 
 --- Scan a LuaRocks repository and output a manifest file.

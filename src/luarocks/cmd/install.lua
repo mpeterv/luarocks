@@ -8,6 +8,7 @@ local fetch = require("luarocks.fetch")
 local util = require("luarocks.util")
 local fs = require("luarocks.fs")
 local deps = require("luarocks.deps")
+local rock_manif = require("luarocks.rock_manif")
 local writer = require("luarocks.manif.writer")
 local remove = require("luarocks.remove")
 local search = require("luarocks.search")
@@ -74,7 +75,7 @@ function install.install_binary_rock(rock_file, deps_mode)
 
    -- For compatibility with .rock files built with LuaRocks 1
    if not fs.exists(path.rock_manifest_file(name, version)) then
-      ok, err = writer.make_rock_manifest(name, version)
+      ok, err = rock_manif.make_rock_manifest(name, version)
       if err then return nil, err end
    end
 
