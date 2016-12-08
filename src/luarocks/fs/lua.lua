@@ -9,7 +9,6 @@ local fs = require("luarocks.fs")
 local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.dir")
 local util = require("luarocks.util")
-local path = require("luarocks.path")
 
 local socket_ok, zip_ok, unzip_ok, lfs_ok, md5_ok, posix_ok, _
 local http, ftp, lrzip, luazip, lfs, md5, posix
